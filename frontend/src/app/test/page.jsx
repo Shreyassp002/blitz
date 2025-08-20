@@ -1,10 +1,13 @@
 "use client";
 import { useState } from "react";
 import { AuctionContractClient } from "../../lib/contractClient";
+import WalletConnect from "../../components/WalletConnect";
+import { useWallet } from "../../hooks/useWallet";
 
 export default function TestPage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { publicKey, isConnected } = useWallet();
 
   const testContract = async () => {
     setLoading(true);
@@ -21,15 +24,31 @@ export default function TestPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Contract Test</h1>
+
+      {/* Wallet Connection */}
+      <div className="mb-6">
+        <WalletConnect />
+      </div>
+
+      {/* Show connected account */}
+      {isConnected && (
+        <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-700">Connected: {publicKey}</p>
+        </div>
+      )}
+
+      {/* Test Contract Button */}
       <button
         onClick={testContract}
         disabled={loading}
-        className="bg-blue-500 text-white px-4 py-2 rounded"
+        className="bg-blue-500 text-white px-4 py-2 rounded mr-4"
       >
         {loading ? "Loading..." : "Test Contract"}
       </button>
+
+      {/* Results */}
       {result && (
-        <pre className="mt-4 bg-gray-100 p-4 rounded overflow-x-auto">
+        <pre className="mt-4 bg-gray-100 p-4 rounded overflow-x-auto text-sm">
           {result}
         </pre>
       )}
