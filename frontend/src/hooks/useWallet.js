@@ -35,6 +35,14 @@ export const useWallet = () => {
           return;
         }
 
+        // ✅ Check if on correct network (Testnet)
+        console.log("🌐 Current Freighter Network:", net);
+        if (net.network !== "TESTNET") {
+          console.warn("⚠️ Freighter is not on Testnet! Current:", net.network);
+          alert("Please switch Freighter to Testnet to use this app");
+          return;
+        }
+
         setPublicKey(addressObj.address);
         setNetwork(net.network);
         setIsWalletConnected(true);
@@ -68,10 +76,21 @@ export const useWallet = () => {
         throw new Error(addressObj.error);
       }
 
-      setPublicKey(access.address); // requestAccess returns the address directly
+      // ✅ Check network before connecting
+      console.log("🌐 Freighter Network Check:", net);
+      if (net.network !== "TESTNET") {
+        alert(
+          `❌ Wrong Network!\nFreighter is on: ${net.network}\nPlease switch to TESTNET`
+        );
+        return false;
+      }
+
+      // ✅ Fixed: Use addressObj.address, not access.address
+      setPublicKey(addressObj.address);
       setNetwork(net.network);
       setIsWalletConnected(true);
 
+      console.log("✅ Wallet connected successfully on Testnet");
       return true;
     } catch (error) {
       console.error("Error connecting wallet:", error);
@@ -90,6 +109,22 @@ export const useWallet = () => {
 
   const signTx = async (txXdr, networkPassphrase) => {
     try {
+      // ✅ Double-check network before signing
+      const currentNet = await getNetwork();
+      console.log("🔐 Signing transaction on network:", currentNet);
+
+      if (currentNet.network !== "TESTNET") {
+        throw new Error(
+          `Wrong network! Expected TESTNET, got ${currentNet.network}`
+        );
+      }
+
+      if (networkPassphrase !== "Test SDF Network ; September 2015") {
+        throw new Error(
+          `Wrong passphrase! Expected Testnet passphrase, got: ${networkPassphrase}`
+        );
+      }
+
       const signedTx = await signTransaction(txXdr, {
         network: networkPassphrase,
         address: publicKey,
