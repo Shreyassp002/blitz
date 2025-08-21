@@ -36,6 +36,7 @@ export class AuctionContractClient {
     this.client = new Client({
       ...networks.testnet,
       rpcUrl,
+      networkPassphrase: "Test SDF Network ; September 2015", // ✅ Explicit testnet passphrase
     });
   }
 
@@ -279,6 +280,9 @@ export class AuctionContractClient {
         }
       );
 
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
+
       return {
         transaction: tx,
         xdr: tx.toXDR(),
@@ -288,7 +292,6 @@ export class AuctionContractClient {
       throw error;
     }
   }
-
   /**
    * Place a bid on the current auction
    */
@@ -304,6 +307,9 @@ export class AuctionContractClient {
           simulate: false,
         }
       );
+
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
 
       return {
         transaction: tx,
@@ -324,6 +330,9 @@ export class AuctionContractClient {
         simulate: false,
       });
 
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
+
       return {
         transaction: tx,
         xdr: tx.toXDR(),
@@ -342,6 +351,9 @@ export class AuctionContractClient {
       const tx = await this.client.end_auction({
         simulate: false,
       });
+
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
 
       return {
         transaction: tx,
@@ -371,6 +383,9 @@ export class AuctionContractClient {
         }
       );
 
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
+
       return {
         transaction: tx,
         xdr: tx.toXDR(),
@@ -380,7 +395,6 @@ export class AuctionContractClient {
       throw error;
     }
   }
-
   /**
    * Set minimum starting bid (owner only)
    */
@@ -394,6 +408,9 @@ export class AuctionContractClient {
           simulate: false,
         }
       );
+
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
 
       return {
         transaction: tx,
@@ -419,6 +436,9 @@ export class AuctionContractClient {
         }
       );
 
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
+
       return {
         transaction: tx,
         xdr: tx.toXDR(),
@@ -442,6 +462,9 @@ export class AuctionContractClient {
           simulate: false,
         }
       );
+
+      // 🔑 Manually simulate before using toXDR
+      await tx.simulate();
 
       return {
         transaction: tx,

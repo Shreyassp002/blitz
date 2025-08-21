@@ -35,6 +35,14 @@ export const useWallet = () => {
           return;
         }
 
+        // ✅ Check if on correct network (Testnet)
+        console.log("🌐 Current Freighter Network:", net);
+        if (net.network !== "TESTNET") {
+          console.warn("⚠️ Freighter is not on Testnet! Current:", net.network);
+          alert("Please switch Freighter to Testnet to use this app");
+          return;
+        }
+
         setPublicKey(addressObj.address);
         setNetwork(net.network);
         setIsWalletConnected(true);
@@ -68,10 +76,21 @@ export const useWallet = () => {
         throw new Error(addressObj.error);
       }
 
-      setPublicKey(access.address); // requestAccess returns the address directly
+      // ✅ Check network before connecting
+      console.log("🌐 Freighter Network Check:", net);
+      if (net.network !== "TESTNET") {
+        alert(
+          `❌ Wrong Network!\nFreighter is on: ${net.network}\nPlease switch to TESTNET`
+        );
+        return false;
+      }
+
+      // ✅ Fixed: Use addressObj.address, not access.address
+      setPublicKey(addressObj.address);
       setNetwork(net.network);
       setIsWalletConnected(true);
 
+      console.log("✅ Wallet connected successfully on Testnet");
       return true;
     } catch (error) {
       console.error("Error connecting wallet:", error);
@@ -82,27 +101,71 @@ export const useWallet = () => {
     }
   };
 
-  const disconnectWallet = () => {
-    setPublicKey("");
-    setNetwork("");
-    setIsWalletConnected(false);
+  const disconnectWallet = async () => {
+    try {
+      // Clear local state
+      setPublicKey("");
+      setNetwork("");
+      setIsWalletConnected(false);
+
+      // Note: Freighter doesn't have a programmatic disconnect API
+      // The connection will persist in Freighter until user manually revokes it
+      console.log("🔓 Disconnected from dApp (Freighter still authorized)");
+
+      // Optional: Show user a message about how to fully disconnect
+      const shouldShowInstructions = window.confirm(
+        "Disconnected from dApp!\n\nNote: To fully revoke access, please:\n1. Click the Freighter extension icon\n2. Go to Settings → Connected Sites\n3. Remove this site\n\nClick OK to see detailed instructions, or Cancel to continue."
+      );
+
+      if (shouldShowInstructions) {
+        alert(
+          "To completely disconnect:\n\n" +
+            "1. 🔗 Click the Freighter wallet extension icon\n" +
+            "2. ⚙️ Go to 'Settings'\n" +
+            "3. 🌐 Select 'Connected Sites'\n" +
+            "4. ❌ Find this site and click 'Disconnect'\n\n" +
+            "This will revoke all permissions for this site."
+        );
+      }
+    } catch (error) {
+      console.error("Error during disconnect:", error);
+    }
   };
 
+  // ✅ FIXED: Correct Freighter signTransaction API usage
   const signTx = async (txXdr, networkPassphrase) => {
     try {
+      const currentNet = await getNetwork();
+      console.log("Freighter current net:", currentNet);
+
+      if (currentNet.network !== "TESTNET") {
+        throw new Error(
+          `Please switch Freighter to TESTNET. Current: ${currentNet.network}`
+        );
+      }
+
+      console.log("🔐 Signing transaction with XDR:", txXdr);
+      console.log("🌐 Network passphrase:", networkPassphrase);
+
+      // ✅ CRITICAL FIX: Correct Freighter API call
+      // Freighter's signTransaction only takes XDR and options, not separate network params
       const signedTx = await signTransaction(txXdr, {
-        network: networkPassphrase,
-        address: publicKey,
+        networkPassphrase: networkPassphrase,
+        accountToSign: publicKey, // Optional but recommended
       });
+
+      console.log("✅ Transaction signed successfully:", signedTx);
 
       if (signedTx.error) {
         throw new Error(signedTx.error);
       }
 
-      return signedTx.signedTxXdr;
-    } catch (error) {
-      console.error("Error signing transaction:", error);
-      throw error;
+      // ✅ CRITICAL FIX: Return the correct property
+      // Freighter returns the signed XDR directly as a string, not in signedTxXdr property
+      return signedTx;
+    } catch (e) {
+      console.error("❌ Error signing transaction:", e);
+      throw e;
     }
   };
 
