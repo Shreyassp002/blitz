@@ -1,6 +1,7 @@
 // App.js or your main component
 import AuctionDisplay from "@/components/auction/AuctionDisplay";
 import QRCodeDisplay from "@/components/auction/QRCodeDisplay";
+import WinnerPreview from "@/components/auction/WinnerPreview";
 import WalletConnect from "@/components/WalletConnect";
 
 export default function App() {
@@ -12,9 +13,14 @@ export default function App() {
           <WalletConnect />
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
           <AuctionDisplay />
           <QRCodeDisplay />
+        </div>
+
+        {/* Winner Preview - Full Width Below Main Grid */}
+        <div className="w-full">
+          <WinnerPreview />
         </div>
       </div>
     </div>
