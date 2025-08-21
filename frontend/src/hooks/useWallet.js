@@ -107,37 +107,40 @@ export const useWallet = () => {
     setIsWalletConnected(false);
   };
 
+  // ✅ FIXED: Correct Freighter signTransaction API usage
   const signTx = async (txXdr, networkPassphrase) => {
     try {
-      // ✅ Double-check network before signing
       const currentNet = await getNetwork();
-      console.log("🔐 Signing transaction on network:", currentNet);
+      console.log("Freighter current net:", currentNet);
 
       if (currentNet.network !== "TESTNET") {
         throw new Error(
-          `Wrong network! Expected TESTNET, got ${currentNet.network}`
+          `Please switch Freighter to TESTNET. Current: ${currentNet.network}`
         );
       }
 
-      if (networkPassphrase !== "Test SDF Network ; September 2015") {
-        throw new Error(
-          `Wrong passphrase! Expected Testnet passphrase, got: ${networkPassphrase}`
-        );
-      }
+      console.log("🔐 Signing transaction with XDR:", txXdr);
+      console.log("🌐 Network passphrase:", networkPassphrase);
 
+      // ✅ CRITICAL FIX: Correct Freighter API call
+      // Freighter's signTransaction only takes XDR and options, not separate network params
       const signedTx = await signTransaction(txXdr, {
-        network: networkPassphrase,
-        address: publicKey,
+        networkPassphrase: networkPassphrase,
+        accountToSign: publicKey, // Optional but recommended
       });
+
+      console.log("✅ Transaction signed successfully:", signedTx);
 
       if (signedTx.error) {
         throw new Error(signedTx.error);
       }
 
-      return signedTx.signedTxXdr;
-    } catch (error) {
-      console.error("Error signing transaction:", error);
-      throw error;
+      // ✅ CRITICAL FIX: Return the correct property
+      // Freighter returns the signed XDR directly as a string, not in signedTxXdr property
+      return signedTx;
+    } catch (e) {
+      console.error("❌ Error signing transaction:", e);
+      throw e;
     }
   };
 

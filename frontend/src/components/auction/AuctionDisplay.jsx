@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useBlitzAuction } from "@/hooks/useBlitzAuction";
+import { Client as GeneratedClient } from "@/contracts/dist/index";
 
 export default function AuctionDisplay() {
   const { publicKey, isConnected, signTransaction } = useWallet();
@@ -52,6 +53,12 @@ export default function AuctionDisplay() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Provide a hard fallback constant or configure via env (recommended)
+  const FALLBACK_CONTRACT_ID =
+    process.env.NEXT_PUBLIC_CONTRACT_ID ||
+    process.env.REACT_APP_CONTRACT_ID ||
+    "CBEFMEZLMEIIH3A2LANCSVJRLXEH2MDMKT7QOIVXGR6RN75YTZFXH7IF"; // <-- replace if you want hardcode
+
   const handlePlaceBid = async () => {
     if (!bidUrl || !bidAmount || !publicKey) {
       alert("Please fill in all fields and connect your wallet");
@@ -66,45 +73,120 @@ export default function AuctionDisplay() {
     setIsPlacingBid(true);
 
     try {
-      console.log("Placing bid...", { bidUrl, bidAmount, publicKey });
+      console.log("🚀 Placing bid...", { bidUrl, bidAmount, publicKey });
 
-      // Convert display amount to contract format
+      // Convert display amount to contract format (BigInt)
       const contractAmount = auctionClient.parseBidAmount(bidAmount);
-      console.log("Contract amount:", contractAmount.toString());
+      console.log("💰 Contract amount (BigInt):", contractAmount.toString());
 
-      // Get transaction XDR from contract client
-      const txResult = await auctionClient.placeBid(
-        publicKey,
-        contractAmount.toString(),
-        bidUrl
-      );
-      console.log("Transaction result:", txResult);
+      // Try to detect contractId / rpcUrl from your wrapped auctionClient
+      const detectedContractId =
+        auctionClient?.client?.contractId ||
+        auctionClient?.client?.contract ||
+        auctionClient?.client?.contractAddress ||
+        auctionClient?.client?._contractId ||
+        auctionClient?.client?.address ||
+        null;
 
-      if (!txResult.xdr) {
-        throw new Error("No transaction XDR returned from contract");
+      const detectedRpcUrl =
+        auctionClient?.client?.rpcUrl ||
+        auctionClient?.client?.rpc ||
+        auctionClient?.client?.rpc_url ||
+        "https://soroban-testnet.stellar.org";
+
+      // final contractId resolution
+      const contractId = detectedContractId || FALLBACK_CONTRACT_ID;
+      if (!contractId || contractId.includes("<PASTE_YOUR_CONTRACT_ID_HERE>")) {
+        const msg =
+          "Contract ID not found. Set NEXT_PUBLIC_CONTRACT_ID or paste the contract id into FALLBACK_CONTRACT_ID.";
+        console.error(msg, { detectedContractId, FALLBACK_CONTRACT_ID });
+        alert(msg);
+        setIsPlacingBid(false);
+        return;
       }
 
-      // Sign transaction with Freighter
-      console.log("Signing transaction...");
-      const signedXdr = await signTransaction(
-        txResult.xdr,
-        "Test SDF Network ; September 2015"
-      ); // Testnet passphrase
+      console.log("📝 Using contractId:", contractId);
+      console.log("🌐 Using rpcUrl:", detectedRpcUrl);
 
-      console.log("Transaction signed successfully!");
+      // ✅ CRITICAL FIX: Build bidder-specific client with proper signTransaction wrapper
+      const bidderClient = await GeneratedClient.from({
+        contractId,
+        rpcUrl: detectedRpcUrl,
+        networkPassphrase: "Test SDF Network ; September 2015",
+        publicKey, // bidder's public key (Freighter)
+        signTransaction: async (txXdr) => {
+          console.log("🔐 Client requesting transaction signature...");
+          try {
+            // ✅ FIXED: Pass correct network passphrase and handle return value
+            const signed = await signTransaction(
+              txXdr,
+              "Test SDF Network ; September 2015"
+            );
 
-      // Here you would submit the signed transaction to the network
-      // You might need to add a submitTransaction method to your contract client
+            console.log("✅ Transaction signed by Freighter:", typeof signed);
 
-      alert("Bid placed successfully!");
+            // ✅ CRITICAL FIX: Freighter returns the signed XDR directly as a string
+            return signed;
+          } catch (error) {
+            console.error("❌ Signing failed:", error);
+            throw error;
+          }
+        },
+      });
+
+      if (!bidderClient) {
+        throw new Error("Failed to construct bidder client.");
+      }
+
+      console.log("🏗️ Building transaction...");
+
+      // ✅ FIXED: Call place_bid with correct parameter structure
+      const assembled = await bidderClient.place_bid({
+        bidder: publicKey,
+        amount: BigInt(contractAmount.toString()),
+        preferred_url: bidUrl,
+      });
+
+      console.log("✅ Transaction assembled successfully");
+      console.log(
+        "🚀 Calling signAndSend() — Freighter will pop up if simulation OK..."
+      );
+
+      // ✅ This should now work correctly with the fixed signTransaction
+      const sendResult = await assembled.signAndSend();
+      console.log("✅ signAndSend result:", sendResult);
+
+      alert("🎉 Bid placed successfully!");
       setBidUrl("");
       setBidAmount("");
 
-      // Refetch data after successful bid
-      setTimeout(refetchData, 2000);
-    } catch (error) {
-      console.error("Bid failed:", error);
-      alert(`Bid failed: ${error.message || "Unknown error"}`);
+      // Refresh auction data after a short delay
+      setTimeout(refetchData, 1500);
+    } catch (err) {
+      console.error("❌ placeBid failed:", err);
+
+      // Enhanced error handling
+      if (err?.message && err.message.includes("SimulationFailedError")) {
+        console.error("🔍 Simulation diagnostics:", err.message);
+        alert(
+          "❌ Simulation failed — check console for diagnostics. Transaction not signed."
+        );
+      } else if (err?.message?.includes("User declined access")) {
+        alert("❌ Transaction was cancelled by user in Freighter wallet.");
+      } else if (
+        err?.message?.includes("options must contain rpcUrl and contractId")
+      ) {
+        alert("❌ Missing rpcUrl/contractId. Check console for details.");
+      } else if (
+        err?.message?.includes("Cannot read properties of undefined")
+      ) {
+        console.error("🐛 Potential client configuration issue:", err);
+        alert(
+          "❌ Client configuration error. Please check console and try again."
+        );
+      } else {
+        alert(`❌ Bid failed: ${err.message || err}`);
+      }
     } finally {
       setIsPlacingBid(false);
     }
@@ -321,7 +403,7 @@ export default function AuctionDisplay() {
             {isPlacingBid ? "⚡ Placing Bid..." : "⚡ Place Bid"}
           </button>
 
-          {/* Debug info */}
+          {/* Enhanced Debug info */}
           <div className="text-xs text-gray-500">
             <p>
               Wallet:{" "}
@@ -333,6 +415,9 @@ export default function AuctionDisplay() {
               Valid URL: {bidUrl ? (isValidUrl(bidUrl) ? "✅" : "❌") : "⏳"}
             </p>
             <p>Amount: {bidAmount || "Not set"}</p>
+            <p className="text-xs text-blue-400 mt-2">
+              💡 If bid fails, check browser console for detailed error logs
+            </p>
           </div>
         </div>
       ) : !isConnected ? (
