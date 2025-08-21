@@ -101,10 +101,35 @@ export const useWallet = () => {
     }
   };
 
-  const disconnectWallet = () => {
-    setPublicKey("");
-    setNetwork("");
-    setIsWalletConnected(false);
+  const disconnectWallet = async () => {
+    try {
+      // Clear local state
+      setPublicKey("");
+      setNetwork("");
+      setIsWalletConnected(false);
+
+      // Note: Freighter doesn't have a programmatic disconnect API
+      // The connection will persist in Freighter until user manually revokes it
+      console.log("🔓 Disconnected from dApp (Freighter still authorized)");
+
+      // Optional: Show user a message about how to fully disconnect
+      const shouldShowInstructions = window.confirm(
+        "Disconnected from dApp!\n\nNote: To fully revoke access, please:\n1. Click the Freighter extension icon\n2. Go to Settings → Connected Sites\n3. Remove this site\n\nClick OK to see detailed instructions, or Cancel to continue."
+      );
+
+      if (shouldShowInstructions) {
+        alert(
+          "To completely disconnect:\n\n" +
+            "1. 🔗 Click the Freighter wallet extension icon\n" +
+            "2. ⚙️ Go to 'Settings'\n" +
+            "3. 🌐 Select 'Connected Sites'\n" +
+            "4. ❌ Find this site and click 'Disconnect'\n\n" +
+            "This will revoke all permissions for this site."
+        );
+      }
+    } catch (error) {
+      console.error("Error during disconnect:", error);
+    }
   };
 
   // ✅ FIXED: Correct Freighter signTransaction API usage

@@ -1,7 +1,7 @@
 // components/QRCodeDisplay.js
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Download, Share2, ExternalLink } from "lucide-react";
+import { Download, Share2, ExternalLink, Zap, Trophy } from "lucide-react";
 import QRCodeLib from "qrcode";
 import { useBlitzAuction } from "../../hooks/useBlitzAuction";
 
@@ -12,20 +12,22 @@ export default function QRCodeDisplay() {
   const { qrUrl, isLoading, error } = useBlitzAuction();
 
   // Default URL when contract returns empty (no winner URL active)
-  const defaultUrl = "https://stellar.org";
+  const defaultUrl = "https://github.com/Shreyassp002/blitz";
 
-  // QR shows ONLY winner URL or default - contract handles all logic
-  const displayUrl = qrUrl && qrUrl.trim() !== "" ? qrUrl : defaultUrl;
-  const isShowingDefault = displayUrl === defaultUrl;
+  // Always ensure we have a URL to display - this fixes the main issue
+  const displayUrl = qrUrl && qrUrl.trim() !== "" ? qrUrl.trim() : defaultUrl;
+  const isShowingDefault =
+    !qrUrl || qrUrl.trim() === "" || displayUrl === defaultUrl;
 
-  // Generate QR code whenever URL changes
+  // Generate QR code whenever URL changes - this will now always have a URL
   useEffect(() => {
     const generateQR = async () => {
-      if (!canvasRef.current || !displayUrl) {
+      if (!canvasRef.current) {
         setIsQRLoading(false);
         return;
       }
 
+      // Always generate QR since we always have a displayUrl now
       setIsQRLoading(true);
       setQrError(null);
 
@@ -41,7 +43,7 @@ export default function QRCodeDisplay() {
         }
 
         await QRCode.toCanvas(canvasRef.current, displayUrl, {
-          width: 220,
+          width: 240,
           margin: 2,
           color: {
             dark: "#1f2937",
@@ -62,84 +64,92 @@ export default function QRCodeDisplay() {
     };
 
     generateQR();
-  }, [displayUrl]);
+  }, [displayUrl]); // This will trigger whenever displayUrl changes
 
-  // Fallback QR placeholder function
+  // Improved fallback QR placeholder function
   const createQRPlaceholder = (canvas, url) => {
     const ctx = canvas.getContext("2d");
-    canvas.width = 220;
-    canvas.height = 220;
+    canvas.width = 240;
+    canvas.height = 240;
 
     // White background
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, 220, 220);
+    ctx.fillRect(0, 0, 240, 240);
 
     // Create a simple grid pattern to look like QR code
     ctx.fillStyle = "#1f2937";
 
-    // Draw corner squares
+    // Draw corner squares (larger for 240px canvas)
     const drawCornerSquare = (x, y) => {
-      ctx.fillRect(x, y, 35, 35);
+      ctx.fillRect(x, y, 42, 42);
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(x + 7, y + 7, 21, 21);
+      ctx.fillRect(x + 8, y + 8, 26, 26);
       ctx.fillStyle = "#1f2937";
-      ctx.fillRect(x + 14, y + 14, 7, 7);
+      ctx.fillRect(x + 16, y + 16, 10, 10);
     };
 
-    drawCornerSquare(10, 10); // Top-left
-    drawCornerSquare(175, 10); // Top-right
-    drawCornerSquare(10, 175); // Bottom-left
+    drawCornerSquare(15, 15); // Top-left
+    drawCornerSquare(183, 15); // Top-right
+    drawCornerSquare(15, 183); // Bottom-left
 
     // Add some random pattern in the middle
-    for (let i = 0; i < 15; i++) {
-      for (let j = 0; j < 15; j++) {
+    for (let i = 0; i < 16; i++) {
+      for (let j = 0; j < 16; j++) {
         if (Math.random() > 0.5) {
-          ctx.fillRect(60 + i * 7, 60 + j * 7, 6, 6);
+          ctx.fillRect(70 + i * 8, 70 + j * 8, 7, 7);
         }
       }
     }
 
     // Add text
     ctx.fillStyle = "#1f2937";
-    ctx.font = "bold 12px Arial";
+    ctx.font = "bold 14px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("⚡ BLITZ QR", 110, 200);
+    ctx.fillText("⚡ BLITZ QR", 120, 215);
 
     // Add URL indicator
-    ctx.font = "8px Arial";
-    const shortUrl = url.length > 25 ? url.substring(0, 25) + "..." : url;
-    ctx.fillText(shortUrl, 110, 212);
+    ctx.font = "10px Arial";
+    const shortUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
+    ctx.fillText(shortUrl, 120, 230);
   };
 
   const handleDownload = () => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const link = document.createElement("a");
-    link.download = `blitz-qr-${Date.now()}.png`;
-    link.href = canvas.toDataURL();
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+    link.download = `blitz-qr-${timestamp}.png`;
+    link.href = canvas.toDataURL("image/png");
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const handleShare = async () => {
-    if (!navigator.share) {
+    if (navigator.share) {
       try {
-        await navigator.clipboard.writeText(displayUrl);
-        alert("URL copied!");
+        await navigator.share({
+          title: "⚡ Blitz Auction Platform",
+          text: "Check out this Blitz Auction URL!",
+          url: displayUrl,
+        });
+        return;
       } catch (error) {
-        console.error("Failed to copy:", error);
-        // Fallback: show the URL in a prompt
-        prompt("Copy this URL:", displayUrl);
+        if (error.name !== "AbortError") {
+          console.error("Failed to share:", error);
+        }
       }
-      return;
     }
 
+    // Fallback to clipboard
     try {
-      await navigator.share({
-        title: "⚡ Blitz Auction Platform",
-        url: displayUrl,
-      });
+      await navigator.clipboard.writeText(displayUrl);
+      // You could add a toast notification here
+      alert("URL copied to clipboard!");
     } catch (error) {
-      console.error("Failed to share:", error);
+      console.error("Failed to copy:", error);
+      // Final fallback: show the URL in a prompt
+      prompt("Copy this URL:", displayUrl);
     }
   };
 
@@ -147,102 +157,112 @@ export default function QRCodeDisplay() {
     window.open(displayUrl, "_blank", "noopener,noreferrer");
   };
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-lg text-center">
-        <div className="py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="text-gray-400 mt-2">Loading QR data...</p>
+      <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-xl">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div>
+          <p className="text-gray-400 text-sm">Loading auction data...</p>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="bg-gray-900 border border-red-700 rounded-xl p-6 shadow-lg text-center">
-        <div className="py-8">
-          <p className="text-red-400">Error loading QR data: {error}</p>
+      <div className="bg-gray-900 border border-red-700 rounded-xl p-6 shadow-xl">
+        <div className="text-center py-8">
+          <div className="text-red-400 text-3xl mb-3">⚠️</div>
+          <p className="text-red-400 text-sm">Error loading auction data</p>
+          <p className="text-gray-500 text-xs mt-2">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-lg text-center">
+    <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-xl">
       {/* Header */}
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-white mb-2">
-          ⚡ Blitz QR Display
-        </h2>
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Zap className="w-5 h-5 text-blue-400" />
+          <h2 className="text-xl font-bold text-white">QR Display</h2>
+        </div>
+
+        {/* Status Badge */}
+        <div className="inline-flex items-center gap-2">
+          {isShowingDefault ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+              Default URL
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <Trophy className="w-3.5 h-3.5" />
+              Winner URL Active
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Status Badge */}
-      <div className="mb-4">
-        <span
-          className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-            isShowingDefault
-              ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-              : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-          }`}
-        >
-          {isShowingDefault ? "⏳ Default URL" : "⚡ Winner URL"}
-        </span>
-      </div>
-
-      {/* QR Code */}
-      <div className="mb-4 flex justify-center">
-        <div className="bg-white p-3 rounded-xl shadow-lg">
+      {/* QR Code Container */}
+      <div className="flex justify-center mb-6">
+        <div className="bg-white p-4 rounded-xl shadow-lg border-2 border-gray-200">
           {isQRLoading ? (
-            <div className="w-[220px] h-[220px] bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <div className="w-[240px] h-[240px] bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p className="text-gray-500 text-sm">Generating QR...</p>
+              </div>
             </div>
           ) : qrError ? (
-            <div className="w-[220px] h-[220px] bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <div className="text-2xl mb-1">❌</div>
-                <p className="text-sm">{qrError}</p>
-                <p className="text-xs mt-1">
-                  Install qrcode: npm install qrcode
+            <div className="w-[240px] h-[240px] bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center text-gray-500 p-4">
+                <div className="text-3xl mb-2">❌</div>
+                <p className="text-sm font-medium mb-1">QR Generation Failed</p>
+                <p className="text-xs">{qrError}</p>
+                <p className="text-xs mt-2 text-gray-400">
+                  Install: npm install qrcode
                 </p>
               </div>
             </div>
           ) : (
-            <canvas ref={canvasRef} className="max-w-full h-auto rounded" />
+            <canvas ref={canvasRef} className="max-w-full h-auto rounded-lg" />
           )}
         </div>
       </div>
 
-      {/* URL Display with Integrated Action Icons */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <p className="text-sm text-gray-300">Destination:</p>
-          {!isShowingDefault && (
-            <span className="text-xs px-2 py-1 bg-blue-700 rounded text-blue-300">
-              🏆 Winner Display
-            </span>
-          )}
+      {/* URL Display Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-gray-300">Winner URL:</p>
         </div>
 
-        <div className="bg-gray-800/50 rounded-lg border border-gray-600 mb-2">
+        {/* URL Container with Actions */}
+        <div className="bg-gray-800/60 rounded-lg border border-gray-600 overflow-hidden">
           <div className="flex items-center">
-            {/* URL Link - Takes most of the space */}
-            <a
-              href={displayUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 text-blue-400 hover:text-blue-300 break-all text-sm p-3 pr-2 transition-colors"
-            >
-              {displayUrl.length > 35
-                ? `${displayUrl.substring(0, 35)}...`
-                : displayUrl}
-            </a>
+            {/* URL Display */}
+            <div className="flex-1 p-3 flex justify-center">
+              <a
+                href={displayUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 transition-colors duration-200 text-sm break-all"
+                title={displayUrl}
+              >
+                {displayUrl.length > 50
+                  ? `${displayUrl.substring(0, 47)}...`
+                  : displayUrl}
+              </a>
+            </div>
 
-            {/* Action Icons */}
-            <div className="flex items-center gap-1 p-2 border-l border-gray-600">
+            {/* Action Buttons */}
+            <div className="flex items-center border-l border-gray-600">
               <button
                 onClick={handleDownload}
-                className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-all duration-200"
+                className="p-3 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200"
                 title="Download QR Code"
               >
                 <Download className="w-4 h-4" />
@@ -250,7 +270,7 @@ export default function QRCodeDisplay() {
 
               <button
                 onClick={handleShare}
-                className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded transition-all duration-200"
+                className="p-3 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 transition-all duration-200 border-l border-gray-600"
                 title="Share URL"
               >
                 <Share2 className="w-4 h-4" />
@@ -258,7 +278,7 @@ export default function QRCodeDisplay() {
 
               <button
                 onClick={handleVisit}
-                className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded transition-all duration-200"
+                className="p-3 text-gray-400 hover:text-green-400 hover:bg-gray-700/50 transition-all duration-200 border-l border-gray-600"
                 title="Visit Website"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -267,26 +287,25 @@ export default function QRCodeDisplay() {
           </div>
         </div>
 
+        {/* Status Description */}
         <p
-          className={`text-sm ${
+          className={`text-sm text-center ${
             isShowingDefault ? "text-gray-500" : "text-blue-400"
           }`}
         >
           {isShowingDefault
-            ? "No winner URL active - showing default"
-            : "Winner's URL (24h display period)"}
+            ? "Displaying default repository URL - no active winner"
+            : "Winner's URL active for 24 hours"}
         </p>
       </div>
 
-      {/* Info */}
-      <div className="text-sm text-gray-400">
-        <p>⚡ Updates automatically on Stellar network</p>
-        <p className="mt-1">🏆 Winners get 24h display time</p>
-
-        {/* Debug info */}
-        <div className="mt-2 text-xs text-gray-600 border-t border-gray-700 pt-2">
-          <p>QR URL: {qrUrl || "None from contract"}</p>
-          <p>Showing: {isShowingDefault ? "Default" : "Winner URL"}</p>
+      {/* Footer Info */}
+      <div className="mt-6 pt-4 border-t border-gray-700">
+        <div className="text-center space-y-1">
+          <p className="text-sm text-gray-400 flex items-center justify-center gap-2">
+            <Zap className="w-4 h-4" />
+            Auto-updates via Stellar network
+          </p>
         </div>
       </div>
     </div>

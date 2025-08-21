@@ -22,6 +22,14 @@ export default function AuctionDisplay() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacingBid, setIsPlacingBid] = useState(false);
 
+  // Clear form when wallet disconnects
+  useEffect(() => {
+    if (!isConnected) {
+      setBidUrl("");
+      setBidAmount("");
+    }
+  }, [isConnected]);
+
   // Update countdown for auction
   useEffect(() => {
     if (timeRemaining) {
@@ -161,7 +169,9 @@ export default function AuctionDisplay() {
       setBidAmount("");
 
       // Refresh auction data after a short delay
-      setTimeout(refetchData, 1500);
+      setTimeout(() => {
+        refetchData();
+      }, 2000); // Increased delay to allow blockchain to update
     } catch (err) {
       console.error("❌ placeBid failed:", err);
 
@@ -249,9 +259,7 @@ export default function AuctionDisplay() {
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-lg">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-white mb-4">
-          ⚡ Current Blitz Auction
-        </h2>
+        <h2 className="text-xl font-bold text-white mb-4">Current Auction</h2>
 
         {/* Auction Status */}
         <div className="space-y-3 mb-4">
@@ -317,10 +325,10 @@ export default function AuctionDisplay() {
           )}
         </div>
 
-        {/* Current Auction URL - Only show during active auction with bids */}
+        {/* Current Auction URL - Show during active auction with bids */}
         {isAuctionActive &&
-          currentAuction?.winner_url &&
-          currentAuction.winner_url.trim() !== "" && (
+          currentAuction?.preferred_url &&
+          currentAuction.preferred_url.trim() !== "" && (
             <div className="mb-4 p-3 bg-green-500/10 rounded-lg border border-green-500/30">
               <div className="flex justify-between items-center mb-2">
                 <p className="text-sm text-green-300">Current Winner URL:</p>
@@ -330,12 +338,12 @@ export default function AuctionDisplay() {
               </div>
 
               <a
-                href={currentAuction.winner_url}
+                href={currentAuction.preferred_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 text-sm break-all block"
               >
-                {currentAuction.winner_url}
+                {currentAuction.preferred_url}
               </a>
 
               <p className="text-xs text-green-400 mt-1">
@@ -346,8 +354,10 @@ export default function AuctionDisplay() {
 
         {/* Show message when auction is active but no bids */}
         {isAuctionActive &&
-          (!currentAuction?.winner_url ||
-            currentAuction.winner_url.trim() === "") && (
+          (!currentAuction?.preferred_url ||
+            currentAuction.preferred_url.trim() === "" ||
+            currentAuction.highest_bid === "0" ||
+            !currentAuction.highest_bid) && (
             <div className="mb-4 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
               <p className="text-sm text-yellow-300 text-center">
                 ⚡ No bids placed yet - be the first to bid on Blitz!
@@ -402,29 +412,22 @@ export default function AuctionDisplay() {
           >
             {isPlacingBid ? "⚡ Placing Bid..." : "⚡ Place Bid"}
           </button>
-
-          {/* Enhanced Debug info */}
-          <div className="text-xs text-gray-500">
-            <p>
-              Wallet:{" "}
-              {publicKey
-                ? `${publicKey.slice(0, 6)}...${publicKey.slice(-4)}`
-                : "Not connected"}
-            </p>
-            <p>
-              Valid URL: {bidUrl ? (isValidUrl(bidUrl) ? "✅" : "❌") : "⏳"}
-            </p>
-            <p>Amount: {bidAmount || "Not set"}</p>
-            <p className="text-xs text-blue-400 mt-2">
-              💡 If bid fails, check browser console for detailed error logs
-            </p>
-          </div>
         </div>
       ) : !isConnected ? (
-        <div className="text-center py-6">
+        <div className="text-center py-8 space-y-4">
+          <div className="text-6xl">🔒</div>
+          <h3 className="text-lg font-semibold text-white">
+            Wallet Not Connected
+          </h3>
           <p className="text-gray-400 mb-4">
-            Connect your Freighter wallet to place bids
+            Connect your Freighter wallet to participate in the auction
           </p>
+          <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30">
+            <p className="text-blue-300 text-sm">
+              💡 Make sure Freighter is installed and set to{" "}
+              <strong>Testnet</strong>
+            </p>
+          </div>
         </div>
       ) : !isAuctionActive ? (
         <div className="text-center py-6">
