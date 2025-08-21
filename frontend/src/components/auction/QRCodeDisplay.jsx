@@ -183,7 +183,7 @@ export default function QRCodeDisplay() {
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-xl">
+    <div className="qr-card">
       {/* Header */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">

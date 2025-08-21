@@ -1,28 +1,36 @@
-// App.js or your main component
+// src/app/auction/page.js
 import AuctionDisplay from "@/components/auction/AuctionDisplay";
 import QRCodeDisplay from "@/components/auction/QRCodeDisplay";
 import WinnerPreview from "@/components/auction/WinnerPreview";
-import WalletConnect from "@/components/WalletConnect";
+import Header from "@/components/Home/Header";
+import Background from "@/components/Home/Background";
 
 export default function Auction() {
   return (
-    <div className="min-h-screen bg-gray-950 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8 flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-white">⚡ Blitz Auction</h1>
-          <WalletConnect />
-        </div>
+    <Background>
+      {/* Header with current page indicator */}
+      <Header currentPage="auction" />
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <AuctionDisplay />
-          <QRCodeDisplay />
-        </div>
+      {/* Main content with top padding to account for fixed header */}
+      <div className="pt-20 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-8">
+            <p className="text-gray-400 text-center mt-2">
+              Live bidding for QR code display rights
+            </p>
+          </div>
 
-        {/* Winner Preview - Full Width Below Main Grid */}
-        <div className="w-full">
-          <WinnerPreview />
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <AuctionDisplay />
+            <QRCodeDisplay />
+          </div>
+
+          {/* Winner Preview - Full Width Below Main Grid */}
+          <div className="w-full">
+            <WinnerPreview />
+          </div>
         </div>
       </div>
-    </div>
+    </Background>
   );
 }

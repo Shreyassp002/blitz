@@ -257,7 +257,7 @@ export default function AuctionDisplay() {
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-lg">
+    <div className="qr-card">
       <div className="mb-4">
         <h2 className="text-xl font-bold text-white mb-4">Current Auction</h2>
 
