@@ -7,7 +7,6 @@ export default function CryptoTicker({ initialData = [] }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  
   const fetchCryptoData = async () => {
     try {
       setIsLoading(true);
@@ -29,13 +28,11 @@ export default function CryptoTicker({ initialData = [] }) {
     }
   };
 
-
   useEffect(() => {
     const interval = setInterval(fetchCryptoData, 80000);
     return () => clearInterval(interval);
   }, []);
 
-  
   const formatPrice = (price) => {
     if (price >= 1) {
       return price.toLocaleString("en-US", {
@@ -47,14 +44,12 @@ export default function CryptoTicker({ initialData = [] }) {
     }
   };
 
-  
   const formatChange = (change) => {
     if (!change) return "0.00%";
     const formatted = Math.abs(change).toFixed(2);
     return change >= 0 ? `+${formatted}%` : `-${formatted}%`;
   };
 
-  
   if (cryptoData.length === 0 && error) {
     return (
       <div className="bg-red-900/50 text-white py-3 px-6">
@@ -63,7 +58,6 @@ export default function CryptoTicker({ initialData = [] }) {
     );
   }
 
-  
   if (cryptoData.length === 0) {
     return (
       <div className="bg-gray-900 text-white py-3">
@@ -79,7 +73,6 @@ export default function CryptoTicker({ initialData = [] }) {
 
   return (
     <div className="bg-transparent text-white py-3 relative">
-      
       <div className="max-w-7xl mx-auto px-6 relative overflow-hidden">
         {/* Loading indicator */}
         {isLoading && (
@@ -97,7 +90,6 @@ export default function CryptoTicker({ initialData = [] }) {
         {/* Scrolling ticker */}
         <div className="relative overflow-hidden">
           <div className="animate-scroll flex items-center space-x-8 whitespace-nowrap pl-12 pr-20">
-            
             {[...cryptoData, ...cryptoData].map((crypto, index) => (
               <div
                 key={`${crypto.id}-${index}`}
