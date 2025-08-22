@@ -308,7 +308,7 @@ export class AuctionContractClient {
         }
       );
 
-      // 🔑 Manually simulate before using toXDR
+      // Manually simulate before using toXDR
       await tx.simulate();
 
       return {
@@ -352,7 +352,7 @@ export class AuctionContractClient {
         simulate: false,
       });
 
-      // 🔑 Manually simulate before using toXDR
+      // Manually simulate before using toXDR
       await tx.simulate();
 
       return {
@@ -409,7 +409,7 @@ export class AuctionContractClient {
         }
       );
 
-      // 🔑 Manually simulate before using toXDR
+      // Manually simulate before using toXDR
       await tx.simulate();
 
       return {
@@ -436,7 +436,7 @@ export class AuctionContractClient {
         }
       );
 
-      // 🔑 Manually simulate before using toXDR
+      // Manually simulate before using toXDR
       await tx.simulate();
 
       return {
@@ -463,7 +463,7 @@ export class AuctionContractClient {
         }
       );
 
-      // 🔑 Manually simulate before using toXDR
+      // Manually simulate before using toXDR
       await tx.simulate();
 
       return {

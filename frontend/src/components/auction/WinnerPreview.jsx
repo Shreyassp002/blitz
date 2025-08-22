@@ -10,7 +10,6 @@ export default function WinnerPreview() {
   const { qrUrl, summary, currentAuction, isLoading, error } =
     useBlitzAuction();
 
-  // Only show if there's a winner URL
   const hasWinnerUrl = qrUrl && qrUrl.trim() !== "";
 
   if (isLoading) {
@@ -24,12 +23,10 @@ export default function WinnerPreview() {
     );
   }
 
-  // Don't render if no winner URL is active
   if (!hasWinnerUrl) {
     return null;
   }
 
-  // Use data from summary or currentAuction - adapt based on your actual data structure
   const winnerData = summary || currentAuction;
 
   return (
@@ -97,7 +94,7 @@ export default function WinnerPreview() {
           </div>
         )}
 
-        {/* Show basic info if we have URL but no detailed winner data */}
+        {/* Show basic info */}
         {!winnerData && (
           <div className="text-center py-2">
             <p className="text-blue-400 text-sm">🏆 Winner URL is active!</p>

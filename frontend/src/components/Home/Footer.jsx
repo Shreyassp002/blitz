@@ -7,7 +7,7 @@ export default function Footer() {
     const socialLinks = [
         {
             name: "GitHub",
-            url: "https://github.com/Shreyassp002",
+            url: "https://github.com/Shreyassp002/blitz",
             icon: Github,
             hoverColor: "hover:text-gray-300",
         },

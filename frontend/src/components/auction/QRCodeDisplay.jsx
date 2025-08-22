@@ -1,4 +1,3 @@
-// components/QRCodeDisplay.js
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Download, Share2, ExternalLink, Zap, Trophy } from "lucide-react";
@@ -11,15 +10,13 @@ export default function QRCodeDisplay() {
   const [isQRLoading, setIsQRLoading] = useState(true);
   const { qrUrl, isLoading, error } = useBlitzAuction();
 
-  // Default URL when contract returns empty (no winner URL active)
+  // Default URL
   const defaultUrl = "https://github.com/Shreyassp002/blitz";
 
-  // Always ensure we have a URL to display - this fixes the main issue
   const displayUrl = qrUrl && qrUrl.trim() !== "" ? qrUrl.trim() : defaultUrl;
   const isShowingDefault =
     !qrUrl || qrUrl.trim() === "" || displayUrl === defaultUrl;
 
-  // Generate QR code whenever URL changes - this will now always have a URL
   useEffect(() => {
     const generateQR = async () => {
       if (!canvasRef.current) {
@@ -27,16 +24,13 @@ export default function QRCodeDisplay() {
         return;
       }
 
-      // Always generate QR since we always have a displayUrl now
       setIsQRLoading(true);
       setQrError(null);
 
       try {
-        // Try to import QRCode library dynamically
         const QRCode = await import("qrcode").catch(() => null);
 
         if (!QRCode) {
-          // Fallback: Create a simple visual QR placeholder
           createQRPlaceholder(canvasRef.current, displayUrl);
           setIsQRLoading(false);
           return;
@@ -54,32 +48,26 @@ export default function QRCodeDisplay() {
 
         setIsQRLoading(false);
       } catch (error) {
-        console.error("QR Code generation failed:", error);
         setQrError("Failed to generate QR code");
 
-        // Create fallback placeholder
         createQRPlaceholder(canvasRef.current, displayUrl);
         setIsQRLoading(false);
       }
     };
 
     generateQR();
-  }, [displayUrl]); // This will trigger whenever displayUrl changes
+  }, [displayUrl]);
 
-  // Improved fallback QR placeholder function
   const createQRPlaceholder = (canvas, url) => {
     const ctx = canvas.getContext("2d");
     canvas.width = 240;
     canvas.height = 240;
 
-    // White background
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, 240, 240);
 
-    // Create a simple grid pattern to look like QR code
     ctx.fillStyle = "#1f2937";
 
-    // Draw corner squares (larger for 240px canvas)
     const drawCornerSquare = (x, y) => {
       ctx.fillRect(x, y, 42, 42);
       ctx.fillStyle = "#ffffff";
@@ -92,7 +80,6 @@ export default function QRCodeDisplay() {
     drawCornerSquare(183, 15); // Top-right
     drawCornerSquare(15, 183); // Bottom-left
 
-    // Add some random pattern in the middle
     for (let i = 0; i < 16; i++) {
       for (let j = 0; j < 16; j++) {
         if (Math.random() > 0.5) {
@@ -101,13 +88,11 @@ export default function QRCodeDisplay() {
       }
     }
 
-    // Add text
     ctx.fillStyle = "#1f2937";
     ctx.font = "bold 14px Arial";
     ctx.textAlign = "center";
     ctx.fillText("⚡ BLITZ QR", 120, 215);
 
-    // Add URL indicator
     ctx.font = "10px Arial";
     const shortUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
     ctx.fillText(shortUrl, 120, 230);
@@ -141,14 +126,10 @@ export default function QRCodeDisplay() {
       }
     }
 
-    // Fallback to clipboard
     try {
       await navigator.clipboard.writeText(displayUrl);
-      // You could add a toast notification here
       alert("URL copied to clipboard!");
     } catch (error) {
-      console.error("Failed to copy:", error);
-      // Final fallback: show the URL in a prompt
       prompt("Copy this URL:", displayUrl);
     }
   };

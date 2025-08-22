@@ -21,7 +21,6 @@ export default function SafeIframe({ src }) {
             }
         }
         checkEmbeddable()
-        // Fallback timeout (optional, can be removed)
         timeoutRef.current = setTimeout(() => {
             if (isAllowed === null) setIsAllowed(false)
         }, 5000)

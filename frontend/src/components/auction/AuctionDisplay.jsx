@@ -1,4 +1,3 @@
-// components/AuctionDisplay.js
 "use client";
 import { useState, useEffect } from "react";
 import { useWallet } from "@/hooks/useWallet";
@@ -22,7 +21,6 @@ export default function AuctionDisplay() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacingBid, setIsPlacingBid] = useState(false);
 
-  // Clear form when wallet disconnects
   useEffect(() => {
     if (!isConnected) {
       setBidUrl("");
@@ -30,14 +28,14 @@ export default function AuctionDisplay() {
     }
   }, [isConnected]);
 
-  // Update countdown for auction
+  // Update countdown
   useEffect(() => {
     if (timeRemaining) {
       setTimeLeft(Number(timeRemaining));
     }
   }, [timeRemaining]);
 
-  // Countdown timer for auction
+  // Countdown
   useEffect(() => {
     if (timeLeft <= 0) return;
 
@@ -51,7 +49,6 @@ export default function AuctionDisplay() {
     return () => clearInterval(interval);
   }, [timeLeft]);
 
-  // Format time remaining
   const formatTimeRemaining = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -61,11 +58,10 @@ export default function AuctionDisplay() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Provide a hard fallback constant or configure via env (recommended)
   const FALLBACK_CONTRACT_ID =
     process.env.NEXT_PUBLIC_CONTRACT_ID ||
     process.env.REACT_APP_CONTRACT_ID ||
-    "CBEFMEZLMEIIH3A2LANCSVJRLXEH2MDMKT7QOIVXGR6RN75YTZFXH7IF"; // <-- replace if you want hardcode
+    "CBEFMEZLMEIIH3A2LANCSVJRLXEH2MDMKT7QOIVXGR6RN75YTZFXH7IF";
 
   const handlePlaceBid = async () => {
     if (!bidUrl || !bidAmount || !publicKey) {
@@ -81,13 +77,9 @@ export default function AuctionDisplay() {
     setIsPlacingBid(true);
 
     try {
-      console.log("🚀 Placing bid...", { bidUrl, bidAmount, publicKey });
-
-      // Convert display amount to contract format (BigInt)
+      // Convert display amount
       const contractAmount = auctionClient.parseBidAmount(bidAmount);
-      console.log("💰 Contract amount (BigInt):", contractAmount.toString());
 
-      // Try to detect contractId / rpcUrl from your wrapped auctionClient
       const detectedContractId =
         auctionClient?.client?.contractId ||
         auctionClient?.client?.contract ||
@@ -113,30 +105,20 @@ export default function AuctionDisplay() {
         return;
       }
 
-      console.log("📝 Using contractId:", contractId);
-      console.log("🌐 Using rpcUrl:", detectedRpcUrl);
-
-      // ✅ CRITICAL FIX: Build bidder-specific client with proper signTransaction wrapper
       const bidderClient = await GeneratedClient.from({
         contractId,
         rpcUrl: detectedRpcUrl,
         networkPassphrase: "Test SDF Network ; September 2015",
-        publicKey, // bidder's public key (Freighter)
+        publicKey,
         signTransaction: async (txXdr) => {
-          console.log("🔐 Client requesting transaction signature...");
           try {
-            // ✅ FIXED: Pass correct network passphrase and handle return value
             const signed = await signTransaction(
               txXdr,
               "Test SDF Network ; September 2015"
             );
 
-            console.log("✅ Transaction signed by Freighter:", typeof signed);
-
-            // ✅ CRITICAL FIX: Freighter returns the signed XDR directly as a string
             return signed;
           } catch (error) {
-            console.error("❌ Signing failed:", error);
             throw error;
           }
         },
@@ -146,38 +128,25 @@ export default function AuctionDisplay() {
         throw new Error("Failed to construct bidder client.");
       }
 
-      console.log("🏗️ Building transaction...");
-
-      // ✅ FIXED: Call place_bid with correct parameter structure
       const assembled = await bidderClient.place_bid({
         bidder: publicKey,
         amount: BigInt(contractAmount.toString()),
         preferred_url: bidUrl,
       });
 
-      console.log("✅ Transaction assembled successfully");
-      console.log(
-        "🚀 Calling signAndSend() — Freighter will pop up if simulation OK..."
-      );
-
-      // ✅ This should now work correctly with the fixed signTransaction
       const sendResult = await assembled.signAndSend();
-      console.log("✅ signAndSend result:", sendResult);
 
-      alert("🎉 Bid placed successfully!");
+      alert("Bid placed successfully!");
       setBidUrl("");
       setBidAmount("");
 
-      // Refresh auction data after a short delay
+      // Refresh auction data
       setTimeout(() => {
         refetchData();
-      }, 2000); // Increased delay to allow blockchain to update
+      }, 2000);
     } catch (err) {
-      console.error("❌ placeBid failed:", err);
-
-      // Enhanced error handling
+      //error handling
       if (err?.message && err.message.includes("SimulationFailedError")) {
-        console.error("🔍 Simulation diagnostics:", err.message);
         alert(
           "❌ Simulation failed — check console for diagnostics. Transaction not signed."
         );
@@ -190,7 +159,6 @@ export default function AuctionDisplay() {
       } else if (
         err?.message?.includes("Cannot read properties of undefined")
       ) {
-        console.error("🐛 Potential client configuration issue:", err);
         alert(
           "❌ Client configuration error. Please check console and try again."
         );
@@ -211,13 +179,11 @@ export default function AuctionDisplay() {
     }
   };
 
-  // Calculate minimum bid using your client's methods
   const getMinimumBid = () => {
     if (!currentAuction) return "0.01";
 
     try {
       if (currentAuction.highest_bid && currentAuction.highest_bid !== "0") {
-        // Add minimum increment (0.001 XLM = 10000 stroops)
         const nextBid = BigInt(currentAuction.highest_bid) + BigInt("10000");
         return auctionClient.formatBidAmount(nextBid.toString());
       }
@@ -325,7 +291,7 @@ export default function AuctionDisplay() {
           )}
         </div>
 
-        {/* Current Auction URL - Show during active auction with bids */}
+        {/* Current Auction URL */}
         {isAuctionActive &&
           currentAuction?.preferred_url &&
           currentAuction.preferred_url.trim() !== "" && (

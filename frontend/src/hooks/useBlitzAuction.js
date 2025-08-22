@@ -1,4 +1,3 @@
-// hooks/useBlitzAuction.js
 import { useState, useEffect } from "react";
 import { AuctionContractClient } from "@/lib/contractClient";
 
@@ -48,23 +47,15 @@ export const useBlitzAuction = () => {
   const placeBid = async (bidder, amount, preferredUrl) => {
     setIsPlacingBid(true);
     try {
-      console.log("Hook: Placing bid with:", { bidder, amount, preferredUrl });
 
-      // Get the transaction XDR from your contract client
       const result = await auctionClient.placeBid(bidder, amount, preferredUrl);
-      console.log("Hook: Got transaction result:", result);
 
-      // If your contract client returns { transaction, xdr }, we need to sign it
       if (result.xdr) {
-        console.log(
-          "Hook: Transaction XDR received, need to sign with Freighter"
-        );
-        // You'll need to import and use your wallet hook here to sign the transaction
-        // The actual signing should be handled in your component with the wallet hook
+        
         return result;
       }
 
-      await fetchAuctionData(); // Refresh data after successful bid
+      await fetchAuctionData(); 
       return result;
     } catch (error) {
       console.error("Hook: Error placing bid:", error);
@@ -98,7 +89,7 @@ export const useBlitzAuction = () => {
 
   useEffect(() => {
     fetchAuctionData();
-    const interval = setInterval(fetchAuctionData, 10000); // Refresh every 10 seconds
+    const interval = setInterval(fetchAuctionData, 10000); 
     return () => clearInterval(interval);
   }, []);
 
