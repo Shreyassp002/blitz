@@ -36,7 +36,12 @@ export default function QRCodeDisplay() {
           return;
         }
 
-        await QRCode.toCanvas(canvasRef.current, displayUrl, {
+        // Clear the canvas first
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        await QRCode.toCanvas(canvas, displayUrl, {
           width: 240,
           margin: 2,
           color: {
@@ -48,6 +53,7 @@ export default function QRCodeDisplay() {
 
         setIsQRLoading(false);
       } catch (error) {
+        console.error("QR generation error:", error);
         setQrError("Failed to generate QR code");
 
         createQRPlaceholder(canvasRef.current, displayUrl);
@@ -55,13 +61,21 @@ export default function QRCodeDisplay() {
       }
     };
 
-    generateQR();
-  }, [displayUrl]);
+    // Add a small delay to ensure the URL has changed
+    const timeoutId = setTimeout(() => {
+      generateQR();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [displayUrl, qrUrl]); // Added qrUrl as dependency to ensure regeneration when it changes
 
   const createQRPlaceholder = (canvas, url) => {
     const ctx = canvas.getContext("2d");
     canvas.width = 240;
     canvas.height = 240;
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, 240, 240);
 
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, 240, 240);

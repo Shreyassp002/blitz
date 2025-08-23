@@ -1,6 +1,13 @@
+"use client";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
 
 export default function FeaturesGrid() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
   const features = [
     {
       icon: (
@@ -20,7 +27,8 @@ export default function FeaturesGrid() {
       ),
       title: "Real-Time Bidding",
       description:
-        "Experience lightning-fast bidding with instant updates and seamless blockchain integration.",
+        "Experience lightning-fast bidding with instant updates and seamless blockchain integration. Watch your bids in real-time as they compete globally.",
+      highlight: "⚡ Lightning Fast",
     },
     {
       icon: (
@@ -36,7 +44,8 @@ export default function FeaturesGrid() {
       ),
       title: "QR Code Control",
       description:
-        "Winners gain complete control over QR code destinations, creating unique digital experiences.",
+        "Winners gain complete control over QR code destinations, creating unique digital experiences. Your QR, your rules - redirect to anywhere you want.",
+      highlight: "🎯 Total Control",
     },
     {
       icon: (
@@ -56,7 +65,8 @@ export default function FeaturesGrid() {
       ),
       title: "Secure Wallet Integration",
       description:
-        "Connect safely with leading wallet providers through our smart contract system.",
+        "Connect safely with leading wallet providers through our smart contract system. Enterprise-grade security with user-friendly interface.",
+      highlight: "🔒 Bank-Level Security",
     },
     {
       icon: (
@@ -82,7 +92,8 @@ export default function FeaturesGrid() {
       ),
       title: "Transparent Auctions",
       description:
-        "Every bid is recorded on the blockchain, ensuring complete transparency and fairness for all participants.",
+        "Every bid is recorded on the blockchain, ensuring complete transparency and fairness for all participants. No hidden fees, no surprises.",
+      highlight: "👁️ 100% Transparent",
     },
     {
       icon: (
@@ -102,7 +113,8 @@ export default function FeaturesGrid() {
       ),
       title: "Instant Settlements",
       description:
-        "Automated smart contracts ensure immediate and secure settlement of winning bids without delays.",
+        "Automated smart contracts ensure immediate and secure settlement of winning bids without delays. Get your QR control instantly.",
+      highlight: "⚡ Instant Results",
     },
     {
       icon: (
@@ -123,15 +135,82 @@ export default function FeaturesGrid() {
       ),
       title: "Powered by Stellar",
       description:
-        "Built on the Stellar blockchain for fast, secure, and low-cost transactions across the globe.",
+        "Built on the Stellar blockchain for fast, secure, and low-cost transactions across the globe. Enterprise-grade infrastructure.",
+      highlight: "🌐 Global Network",
     },
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
   return (
-    <section id="features" className="py-20 px-6">
-      <div className="max-w-6xl mx-auto">
+    <section id="features" className="py-20 px-6 relative">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute top-20 right-10 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.1, 0.3, 0.1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 left-10 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"
+          animate={{
+            scale: [1.3, 1, 1.3],
+            opacity: [0.3, 0.1, 0.3],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-6xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-300 text-sm font-medium mb-6"
+          >
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+            🚀 Revolutionary Features
+          </motion.div>
+          
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Why Choose
             <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
@@ -141,15 +220,26 @@ export default function FeaturesGrid() {
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Experience the future of digital auctions with cutting-edge
-            blockchain technology and user-centric design.
+            blockchain technology and user-centric design that puts you in control.
           </p>
-        </div>
+        </motion.div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div
+          ref={ref}
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {features.map((feature, index) => (
-            <div
+            <motion.div
               key={index}
+              variants={itemVariants}
+              whileHover={{ 
+                scale: 1.02,
+                transition: { duration: 0.2 }
+              }}
               className="relative p-6 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 group hover:border-transparent transition-all duration-500 overflow-hidden"
             >
               {/* Glowing border effect */}
@@ -165,11 +255,25 @@ export default function FeaturesGrid() {
 
               {/* Content */}
               <div className="relative z-10">
+                {/* Highlight Badge */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-300 text-xs font-medium mb-4"
+                >
+                  {feature.highlight}
+                </motion.div>
+
                 {/* Icon */}
                 <div className="mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-xl flex items-center justify-center text-blue-400 group-hover:text-purple-400 transition-colors duration-300 group-hover:shadow-lg group-hover:shadow-purple-400/25">
+                  <motion.div
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                    className="w-16 h-16 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-xl flex items-center justify-center text-blue-400 group-hover:text-purple-400 transition-colors duration-300 group-hover:shadow-lg group-hover:shadow-purple-400/25"
+                  >
                     {feature.icon}
-                  </div>
+                  </motion.div>
                 </div>
 
                 {/* Title */}
@@ -185,21 +289,30 @@ export default function FeaturesGrid() {
 
               {/* Background glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-gray-300 mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="text-center mt-16"
+        >
+          <p className="text-gray-300 mb-6 text-lg">
             Ready to experience the future of digital auctions?
           </p>
           <Link href="/auction">
-            <button className="bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:shadow-xl hover:shadow-blue-500/25"
+            >
               Get Started Today
-            </button>
+            </motion.button>
           </Link>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
