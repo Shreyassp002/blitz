@@ -13,9 +13,7 @@ export default async function Auction() {
   return (
     <Background>
       {/* Header */}
-      <PageTransition delay={150}>
-        <Header currentPage="auction" />
-      </PageTransition>
+      <Header currentPage="auction" />
 
       {/* Crypto Price Ticker */}
       <div className="pt-20">

@@ -8,29 +8,51 @@ import { useState, useEffect } from "react";
 export default function Header({ currentPage = "home" }) {
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     setMounted(true);
 
     const handleScroll = () => {
-      const isScrolled = window.scrollY > 100;
+      const currentScrollY = window.scrollY;
+      const isScrolled = currentScrollY > 50;
+      
+      // Hide header when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false); // Hide header when scrolling down
+      } else {
+        setIsVisible(true); // Show header when scrolling up
+      }
+      
       setScrolled(isScrolled);
+      setLastScrollY(currentScrollY);
     };
 
     handleScroll();
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const getHeaderBackground = () => {
-    return scrolled ? "bg-black/30 backdrop-blur-md" : "bg-transparent";
+    return scrolled 
+      ? "bg-black/80 backdrop-blur-lg border-b border-white/10" 
+      : "bg-transparent";
+  };
+
+  const getHeaderShadow = () => {
+    return scrolled ? "shadow-lg shadow-black/20" : "";
+  };
+
+  const getHeaderTransform = () => {
+    return isVisible ? "translate-y-0" : "-translate-y-full";
   };
 
   // Prevent hydration mismatch
   if (!mounted) {
     return (
-      <header className="fixed top-0 left-0 right-0 z-50 w-full bg-transparent">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full bg-black/80 backdrop-blur-lg border-b border-white/10 shadow-lg shadow-black/20 transition-transform duration-200 ease-out">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
@@ -94,7 +116,7 @@ export default function Header({ currentPage = "home" }) {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-700 ease-out ${getHeaderBackground()}`}
+      className={`fixed top-0 left-0 right-0 z-50 w-full transition-transform duration-200 ease-out ${getHeaderBackground()} ${getHeaderShadow()} ${getHeaderTransform()}`}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}

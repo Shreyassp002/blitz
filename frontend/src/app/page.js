@@ -31,11 +31,11 @@ function LoadingFallback() {
     <Background>
       <div className="min-h-screen flex flex-col">
         {/* Header skeleton */}
-        <div className="fixed top-0 left-0 right-0 z-50 w-full bg-transparent">
+        <div className="fixed top-0 left-0 right-0 z-50 w-full bg-black/80 backdrop-blur-lg border-b border-white/10 shadow-lg shadow-black/20">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg animate-pulse"></div>
-              <span className="text-white text-xl font-bold">QRBid</span>
+              <span className="text-white text-xl font-bold">Blitz</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <div className="w-12 h-6 bg-gray-700 rounded animate-pulse"></div>
@@ -68,13 +68,11 @@ export default async function LandingPage() {
   return (
     <Background>
       <Suspense fallback={<LoadingFallback />}>
+        {/* Header - outside PageTransition to avoid transform conflicts */}
+        <Header currentPage="home" />
+        
         <PageTransition delay={150}>
           <div className="min-h-screen flex flex-col">
-            {/* Header */}
-            <PageTransition delay={150}>
-              <Header currentPage="home" />
-            </PageTransition>
-
             {/* Crypto Price Ticker */}
             <div className="pt-20">
               <Suspense fallback={<CryptoTickerFallback />}>
