@@ -26,7 +26,7 @@ fi
 
 # Build the contract
 echo -e "${YELLOW}📦 Building contract...${NC}"
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32v1-none --release
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Build failed!${NC}"
@@ -39,7 +39,7 @@ echo -e "${GREEN}✅ Build successful!${NC}"
 echo -e "${YELLOW}🔧 Deploying contract to ${NETWORK}...${NC}"
 
 DEPLOY_OUTPUT=$(stellar contract deploy \
-    --wasm target/wasm32-unknown-unknown/release/blitz.wasm \
+    --wasm target/wasm32v1-none/release/blitz.wasm \
     --source-account $SOURCE_ACCOUNT \
     --network $NETWORK)
 
@@ -59,7 +59,7 @@ echo -e "${GREEN}💾 Contract ID saved to contract-id.txt${NC}"
 # Install contract (create alias)
 echo -e "${YELLOW}🔗 Installing contract alias...${NC}"
 stellar contract install \
-    --wasm target/wasm32-unknown-unknown/release/blitz.wasm \
+    --wasm target/wasm32v1-none/release/blitz.wasm \
     --source-account $SOURCE_ACCOUNT \
     --network $NETWORK
 
