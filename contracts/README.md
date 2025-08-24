@@ -47,6 +47,8 @@ contracts/
 - Stellar testnet account
 - wasm32v1-none target: `rustup target add wasm32v1-none`
 
+> **Official Setup Guide**: For detailed setup instructions, follow the [official Stellar smart contract setup guide](https://developers.stellar.org/docs/build/smart-contracts/getting-started/setup).
+
 ### Building
 
 ```bash
@@ -68,6 +70,36 @@ cd scripts
 ./deploy.sh
 ```
 
+### Initialization
+
+After deployment, initialize the contract with owner, platform wallet, and token addresses:
+
+```bash
+cd scripts
+./initialize.sh
+```
+
+The initialization script will:
+- Load the contract ID from deployment
+- Allow you to set custom addresses or use defaults
+- Initialize the contract with proper configuration
+- Create a `config.env` file for future operations
+
+### Management
+
+Use the management script for ongoing contract operations:
+
+```bash
+cd scripts
+./manage.sh [command]
+```
+
+Available commands:
+- `start-auction` - Start a new auction
+- `place-bid` - Place a bid interactively
+- `summary` - Get auction status
+- `help` - Show all available commands
+
 The scripts use Stellar CLI commands like:
 - `stellar contract deploy` - Deploy the contract
 - `stellar contract install` - Install contract alias
@@ -75,19 +107,49 @@ The scripts use Stellar CLI commands like:
 
 ## Contract Functions
 
-- **create_auction**: Initialize a new QR code auction
-- **place_bid**: Submit a bid for the current auction
-- **finalize_auction**: Complete the auction and determine winner
-- **update_destination**: Set the QR code destination for the winner
-- **get_auction_status**: Query current auction information
+### **Core Auction Functions**
+- **initialize**: Initialize the contract with owner and configuration
+- **start_auction**: Start a new QR code auction
+- **place_bid**: Submit a bid with preferred URL for the current auction
+- **end_auction**: End the current auction and determine winner
+
+### **Query Functions**
+- **get_current_auction**: Get current auction details
+- **get_last_auction**: Get last completed auction
+- **get_auction_summary**: Get comprehensive auction status
+- **get_minimum_bid**: Calculate minimum bid for current auction
+- **get_time_remaining**: Get time left in current auction
+- **is_auction_active**: Check if auction is currently active
+
+### **QR Code Management**
+- **get_qr_url**: Get the current QR code destination URL
+- **get_current_auction_url**: Get URL during active bidding
+- **get_qr_url_status**: Get QR code status and source
+- **get_qr_url_expiry_time**: Get when current URL expires
+
+### **Owner Functions**
+- **set_min_bid_increment**: Set minimum bid increment (owner only)
+- **set_min_starting_bid**: Set minimum starting bid (owner only)
+- **set_platform_wallet**: Update platform wallet address (owner only)
+- **transfer_ownership**: Transfer contract ownership (owner only)
+
+### **Utility Functions**
+- **get_contract_info**: Get contract configuration and status
+- **get_auction_counter**: Get total number of auctions
+- **get_auction_history**: Get history of completed auctions
 
 ## Configuration
 
-Contract parameters can be configured in `scripts/config.env`:
-- Auction duration
-- Minimum bid increments
-- Platform fees
-- Network endpoints
+The `scripts/config.env` file contains contract deployment and initialization settings:
+
+- **CONTRACT_ID**: The deployed contract's address
+- **OWNER_ADDRESS**: Contract owner's Stellar address
+- **PLATFORM_WALLET**: Wallet address for receiving auction fees
+- **TOKEN_ADDRESS**: Stellar token address for payments
+- **NETWORK**: Network (testnet/mainnet)
+- **SOURCE_ACCOUNT**: Account used for contract operations
+
+> **Note**: Auction duration, bid increments, and other parameters are hardcoded in the smart contract and can be modified by the owner using the `set_min_bid_increment` and `set_min_starting_bid` functions.
 
 ## Security Features
 

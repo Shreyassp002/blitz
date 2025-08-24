@@ -12,16 +12,16 @@ The web application for the Blitz QR Code Auction platform, built with Next.js. 
 
 The Blitz frontend enables users to:
 - View active auctions and their current status
-- Place bids on QR codes in real-time
+- Place bids on QR codes with their preferred URLs in real-time
 - Monitor auction progress and time remaining
-- Update QR code destinations after winning auctions
+- Submit preferred URLs during bidding (URLs are displayed if they win)
 - Connect wallets for blockchain interactions
 
 ## Features
 
 - **Auction Interface**: Real-time display of auction information
 - **Bidding System**: Interactive bid placement with validation
-- **Wallet Integration**: Seamless connection to Soroban wallets
+- **Wallet Integration**: Seamless connection to freighter wallets
 - **QR Code Management**: Dynamic destination updates for winners
 - **Responsive Design**: Mobile-friendly interface for all devices
 
@@ -82,9 +82,13 @@ npm start
 
 - **AuctionDisplay**: Shows current auction status and bidding interface
 - **QRCodeDisplay**: Renders QR codes with current destinations
-- **WalletConnect**: Handles wallet connection and blockchain interactions
-- **BiddingInterface**: Manages bid placement and validation
+- **SafeIframe**: Safely displays external URLs in iframes
 - **WinnerPreview**: Displays auction results and winner information
+- **WalletConnect**: Handles wallet connection and blockchain interactions
+- **CryptoTicker**: Displays cryptocurrency price information
+- **Header & Footer**: Navigation and branding components
+- **HeroSection**: Landing page hero section
+- **FeaturesGrid**: Showcases platform features
 
 ## Technology Stack
 
@@ -92,17 +96,11 @@ npm start
 - **UI Library**: React 18
 - **Styling**: Tailwind CSS
 - **State Management**: React hooks and context
-- **Blockchain**: Soroban integration via custom hooks
+- **Blockchain**: Stellar Network
 - **Wallet Support**: Freighter wallet integration
 - **QR Codes**: Dynamic QR code generation and management
 
-## Configuration
 
-Environment variables can be configured in `.env.local`:
-- Contract addresses
-- Network endpoints
-- API configurations
-- Feature flags
 
 ## Integration
 

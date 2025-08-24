@@ -46,17 +46,38 @@ Blitz/
 
 ## Quick Start
 
-1. **Deploy Contracts**: Navigate to `contracts/` and follow the deployment guide
-2. **Run Frontend**: Navigate to `frontend/` and start the development server
+1. **Deploy Contracts**: Navigate to [`contracts/`](./contracts/) and follow the deployment guide in their README
+2. **Run Frontend**: Navigate to [`frontend/`](./frontend/) and start the development server using their README instructions
 3. **Participate**: Connect your wallet and start bidding on QR codes
+
+> **📖 Detailed Instructions**: Each directory contains its own comprehensive README with specific setup, deployment, and usage instructions.
 
 ## Technology Stack
 
-- **Blockchain**: Stellar network with Soroban smart contracts
-- **Smart Contracts**: Rust (wasm32v1-none target)
-- **Frontend**: Next.js, React
+### **Blockchain & Smart Contracts**
+- **Network**: Stellar network with Soroban smart contract platform
+- **Language**: Rust with wasm32v1-none target
+- **Deployment**: Stellar CLI for contract management
+- **Storage**: Persistent storage with Soroban SDK
+
+### **Frontend & UI**
+- **Framework**: Next.js 14 with App Router
+- **UI Library**: React 18
 - **Styling**: Tailwind CSS
+- **State Management**: React hooks and context
+- **Responsive Design**: Mobile-first approach
+
+### **Development & Tools**
+- **Package Manager**: npm/Node.js
+- **Build Tool**: Cargo for Rust, Next.js build system
+- **Version Control**: Git
+- **Code Quality**: ESLint, Rust compiler
+
+### **Integration & Services**
 - **Wallet**: Freighter wallet integration
+- **QR Codes**: Dynamic generation and management
+- **Real-time Updates**: Live auction monitoring
+- **API**: RESTful endpoints for contract interaction
 
 ## Use Cases
 
