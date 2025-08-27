@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Download, Share2, ExternalLink, Zap, Trophy } from "lucide-react";
 import QRCodeLib from "qrcode";
 import { useBlitzAuction } from "../../hooks/useBlitzAuction";
@@ -7,110 +7,60 @@ import { useBlitzAuction } from "../../hooks/useBlitzAuction";
 export default function QRCodeDisplay() {
   const canvasRef = useRef(null);
   const [qrError, setQrError] = useState(null);
-  const [isQRLoading, setIsQRLoading] = useState(true);
+  const [qrGenerated, setQrGenerated] = useState(false);
   const { qrUrl, isLoading, error } = useBlitzAuction();
 
   // Default URL
   const defaultUrl = "https://github.com/Shreyassp002/blitz";
 
+  // QR shows winner URL or default
   const displayUrl = qrUrl && qrUrl.trim() !== "" ? qrUrl.trim() : defaultUrl;
-  const isShowingDefault =
-    !qrUrl || qrUrl.trim() === "" || displayUrl === defaultUrl;
+  const isShowingDefault = displayUrl === defaultUrl;
 
-  useEffect(() => {
-    const generateQR = async () => {
-      if (!canvasRef.current) {
-        setIsQRLoading(false);
-        return;
-      }
+  const generateQR = useCallback(async (url) => {
+    if (!canvasRef.current || !url) {
+      return;
+    }
 
-      setIsQRLoading(true);
+    try {
       setQrError(null);
+      setQrGenerated(false);
 
-      try {
-        const QRCode = await import("qrcode").catch(() => null);
+      await QRCodeLib.toCanvas(canvasRef.current, url, {
+        width: 240,
+        margin: 2,
+        color: {
+          dark: "#1f2937",
+          light: "#ffffff",
+        },
+        errorCorrectionLevel: "M",
+      });
 
-        if (!QRCode) {
-          createQRPlaceholder(canvasRef.current, displayUrl);
-          setIsQRLoading(false);
-          return;
-        }
+      setQrGenerated(true);
+    } catch (error) {
+      setQrError(`Failed to generate QR code: ${error.message}`);
+      setQrGenerated(false);
+    }
+  }, []);
 
-        // Clear the canvas first
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        await QRCode.toCanvas(canvas, displayUrl, {
-          width: 240,
-          margin: 2,
-          color: {
-            dark: "#1f2937",
-            light: "#ffffff",
-          },
-          errorCorrectionLevel: "M",
-        });
-
-        setIsQRLoading(false);
-      } catch (error) {
-        console.error("QR generation error:", error);
-        setQrError("Failed to generate QR code");
-
-        createQRPlaceholder(canvasRef.current, displayUrl);
-        setIsQRLoading(false);
-      }
-    };
-
-    // Add a small delay to ensure the URL has changed
+  // Generate QR code whenever URL changes
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
-      generateQR();
+      generateQR(displayUrl);
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [displayUrl, qrUrl]); // Added qrUrl as dependency to ensure regeneration when it changes
+  }, [displayUrl, generateQR]);
 
-  const createQRPlaceholder = (canvas, url) => {
-    const ctx = canvas.getContext("2d");
-    canvas.width = 240;
-    canvas.height = 240;
-
-    // Clear the canvas
-    ctx.clearRect(0, 0, 240, 240);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, 240, 240);
-
-    ctx.fillStyle = "#1f2937";
-
-    const drawCornerSquare = (x, y) => {
-      ctx.fillRect(x, y, 42, 42);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(x + 8, y + 8, 26, 26);
-      ctx.fillStyle = "#1f2937";
-      ctx.fillRect(x + 16, y + 16, 10, 10);
-    };
-
-    drawCornerSquare(15, 15); // Top-left
-    drawCornerSquare(183, 15); // Top-right
-    drawCornerSquare(15, 183); // Bottom-left
-
-    for (let i = 0; i < 16; i++) {
-      for (let j = 0; j < 16; j++) {
-        if (Math.random() > 0.5) {
-          ctx.fillRect(70 + i * 8, 70 + j * 8, 7, 7);
-        }
+  const canvasCallbackRef = useCallback(
+    (node) => {
+      if (node !== null) {
+        canvasRef.current = node;
+        generateQR(displayUrl);
       }
-    }
-
-    ctx.fillStyle = "#1f2937";
-    ctx.font = "bold 14px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("⚡ BLITZ QR", 120, 215);
-
-    ctx.font = "10px Arial";
-    const shortUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
-    ctx.fillText(shortUrl, 120, 230);
-  };
+    },
+    [displayUrl, generateQR]
+  );
 
   const handleDownload = () => {
     if (!canvasRef.current) return;
@@ -205,14 +155,7 @@ export default function QRCodeDisplay() {
       {/* QR Code Container */}
       <div className="flex justify-center mb-6">
         <div className="bg-white p-4 rounded-xl shadow-lg border-2 border-gray-200">
-          {isQRLoading ? (
-            <div className="w-[240px] h-[240px] bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                <p className="text-gray-500 text-sm">Generating QR...</p>
-              </div>
-            </div>
-          ) : qrError ? (
+          {qrError ? (
             <div className="w-[240px] h-[240px] bg-gray-100 rounded-lg flex items-center justify-center">
               <div className="text-center text-gray-500 p-4">
                 <div className="text-3xl mb-2">❌</div>
@@ -224,7 +167,20 @@ export default function QRCodeDisplay() {
               </div>
             </div>
           ) : (
-            <canvas ref={canvasRef} className="max-w-full h-auto rounded-lg" />
+            <>
+              {/* Use callback ref instead of regular ref */}
+              <canvas
+                ref={canvasCallbackRef}
+                className="max-w-full h-auto rounded-lg"
+              />
+
+              {/* Loading indicator while QR is generating */}
+              {!qrGenerated && (
+                <div className="w-[240px] h-[240px] bg-gray-100 rounded-lg flex items-center justify-center absolute">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -232,7 +188,9 @@ export default function QRCodeDisplay() {
       {/* URL Display Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-gray-300">Winner URL:</p>
+          <p className="text-sm font-medium text-gray-300">
+            {isShowingDefault ? "Default URL:" : "Winner URL:"}
+          </p>
         </div>
 
         {/* URL Container with Actions */}
@@ -259,6 +217,7 @@ export default function QRCodeDisplay() {
                 onClick={handleDownload}
                 className="p-3 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200"
                 title="Download QR Code"
+                disabled={!qrGenerated}
               >
                 <Download className="w-4 h-4" />
               </button>
