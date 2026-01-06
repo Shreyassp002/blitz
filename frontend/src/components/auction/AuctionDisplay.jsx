@@ -61,7 +61,7 @@ export default function AuctionDisplay() {
   const FALLBACK_CONTRACT_ID =
     process.env.NEXT_PUBLIC_CONTRACT_ID ||
     process.env.REACT_APP_CONTRACT_ID ||
-    "CBEFMEZLMEIIH3A2LANCSVJRLXEH2MDMKT7QOIVXGR6RN75YTZFXH7IF";
+    "CDPEEWYNKSEWF4AAMWAQPNW6EWYEYVKRHBOIX63YDQFMV3TEFXXNHNBJ";
 
   const handlePlaceBid = async () => {
     if (!bidUrl || !bidAmount || !publicKey) {
